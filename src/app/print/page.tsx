@@ -221,9 +221,9 @@ const handlePrint = () => {
 
         {/* Print Button */}
         <Button
-          onClick={handlePrint}
-          className="w-full bg-keiths-red hover:bg-keiths-darkRed h-12 text-base"
-        >
+  onClick={handleDownloadPDF}
+  className="w-full bg-keiths-red hover:bg-keiths-darkRed h-12 text-base"
+>
           <Printer className="h-5 w-5 mr-2" />
           Print {formType === 'production' ? 'Production' : 'Waste'} Form
         </Button>
