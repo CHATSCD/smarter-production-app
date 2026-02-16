@@ -42,17 +42,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
-    const data = await res.json();
-    if (!res.ok) return { error: data.error || 'Login failed' };
-    localStorage.setItem('keiths_auth_token', data.token);
-    setToken(data.token);
-    setUser(data.user);
-    return {};
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) return { error: data.error || 'Login failed' };
+      localStorage.setItem('keiths_auth_token', data.token);
+      setToken(data.token);
+      setUser(data.user);
+      return {};
+    } catch {
+      return { error: 'Unable to connect. Please try again.' };
+    }
   }, []);
 
   const logout = useCallback(async () => {
