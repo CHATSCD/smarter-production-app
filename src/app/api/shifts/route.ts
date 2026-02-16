@@ -8,6 +8,7 @@ export const GET = withAuth(async (req, auth) => {
   const date = searchParams.get('date');
   const storeId = auth.role === 'admin' ? (searchParams.get('storeId') || auth.storeId) : auth.storeId;
   const weekStart = searchParams.get('weekStart');
+  const weekEnd = searchParams.get('weekEnd');
 
   let q = `
     SELECT s.*,
@@ -27,8 +28,14 @@ export const GET = withAuth(async (req, auth) => {
   } else if (weekStart) {
     params.push(weekStart);
     q += ` AND s.date >= $${params.length}`;
-    params.push(weekStart);
-    q += ` AND s.date < ($${params.length}::date + interval '7 days')`;
+    if (weekEnd) {
+      params.push(weekEnd);
+      q += ` AND s.date <= $${params.length}`;
+    } else {
+      // Default to 35 days (5 weeks) so the calendar can navigate forward
+      params.push(weekStart);
+      q += ` AND s.date < ($${params.length}::date + interval '35 days')`;
+    }
   }
 
   // Employees only see own shifts + unassigned
