@@ -345,6 +345,19 @@ export function clearAllData(): void {
   keysToRemove.forEach((key) => localStorage.removeItem(key));
 }
 
+// ─── Inventory Count Session ─────────────────────────────────────────────────
+export function getInventoryCounts(): Record<string, number> {
+  return getItem<Record<string, number>>(k('inventory-counts'), {});
+}
+
+export function saveInventoryCounts(counts: Record<string, number>): void {
+  setItem(k('inventory-counts'), counts);
+}
+
+export function clearInventoryCounts(): void {
+  setItem(k('inventory-counts'), {});
+}
+
 // ─── Utilities ───────────────────────────────────────────────────────────────
 export function getTodayStr(): string {
   return new Date().toISOString().split('T')[0];

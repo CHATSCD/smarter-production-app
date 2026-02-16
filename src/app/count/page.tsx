@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ClipboardCheck, Search, Printer, Save, Package, Plus, Minus } from 'lucide-react';
+import { ClipboardCheck, Search, Printer, Save, Package, Plus, Minus, RotateCcw } from 'lucide-react';
 import Header from '@/components/Header';
 import BottomNav from '@/components/BottomNav';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +9,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { CATEGORIES } from '@/data/inventory';
-import { getEnabledForInventory, getLocationName, getInventory, saveInventory } from '@/lib/storage';
+import {
+  getEnabledForInventory,
+  getLocationName,
+  getInventory,
+  saveInventory,
+  getInventoryCounts,
+  saveInventoryCounts,
+  clearInventoryCounts,
+} from '@/lib/storage';
 import { InventoryItem } from '@/types';
 
 export default function CountPage() {
@@ -24,13 +32,18 @@ export default function CountPage() {
     setItems(getEnabledForInventory());
     setLocationName(getLocationName());
     setCountDate(new Date().toISOString().split('T')[0]);
+    setCounts(getInventoryCounts());
   }, []);
 
   const handleCountChange = (itemId: string, value: number) => {
-    setCounts({
-      ...counts,
-      [itemId]: Math.max(0, value),
-    });
+    const updated = { ...counts, [itemId]: Math.max(0, value) };
+    setCounts(updated);
+    saveInventoryCounts(updated);
+  };
+
+  const handleClearCounts = () => {
+    setCounts({});
+    clearInventoryCounts();
   };
 
   const updateParLevel = (itemId: string, newParLevel: number) => {
@@ -163,15 +176,25 @@ export default function CountPage() {
           </Card>
         )}
 
-        {/* Print Button */}
+        {/* Print / Clear Buttons */}
         {items.length > 0 && (
-          <Button
-            onClick={handlePrint}
-            className="w-full bg-keiths-red hover:bg-keiths-darkRed h-12 text-base"
-          >
-            <Printer className="h-5 w-5 mr-2" />
-            Print Order Sheet
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={handlePrint}
+              className="flex-1 bg-keiths-red hover:bg-keiths-darkRed h-12 text-base"
+            >
+              <Printer className="h-5 w-5 mr-2" />
+              Print Order Sheet
+            </Button>
+            <Button
+              onClick={handleClearCounts}
+              variant="outline"
+              className="h-12 px-4 text-gray-600 border-gray-300"
+              title="Clear all counts"
+            >
+              <RotateCcw className="h-5 w-5" />
+            </Button>
+          </div>
         )}
 
         {/* Items by Category */}
@@ -186,8 +209,9 @@ export default function CountPage() {
               </CardHeader>
               <CardContent className="pt-0 space-y-0.5">
                 {/* Column Headers */}
-                <div className="grid grid-cols-[1fr,80px,60px,60px] gap-2 py-1 border-b mb-2">
+                <div className="grid grid-cols-[1fr,50px,80px,60px,60px] gap-2 py-1 border-b mb-2">
                   <span className="text-[10px] font-semibold text-gray-600">Item Name</span>
+                  <span className="text-[10px] font-semibold text-gray-600 text-center">Unit</span>
                   <span className="text-[10px] font-semibold text-gray-600 text-center">Par Level</span>
                   <span className="text-[10px] font-semibold text-gray-600 text-center">Count</span>
                   <span className="text-[10px] font-semibold text-gray-600 text-center">Order</span>
@@ -201,12 +225,15 @@ export default function CountPage() {
                   return (
                     <div
                       key={item.id}
-                      className={`grid grid-cols-[1fr,80px,60px,60px] gap-2 py-1.5 items-center ${
+                      className={`grid grid-cols-[1fr,50px,80px,60px,60px] gap-2 py-1.5 items-center ${
                         belowPar && counts[item.id] !== undefined ? 'bg-orange-50 rounded px-1' : ''
                       }`}
                     >
                       <span className="text-sm truncate pr-2">
                         {item.name}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground text-center truncate">
+                        {item.unit !== 'units' ? item.unit : ''}
                       </span>
                       <div className="flex items-center gap-0.5 justify-center">
                         <button
@@ -277,7 +304,8 @@ export default function CountPage() {
                 <thead>
                   <tr>
                     <th className="text-left py-0.5 px-1 border-b">Item</th>
-                    <th className="text-center py-0.5 px-1 border-b w-[50px]">Par</th>
+                    <th className="text-center py-0.5 px-1 border-b w-[40px]">Unit</th>
+                    <th className="text-center py-0.5 px-1 border-b w-[40px]">Par</th>
                     <th className="text-center py-0.5 px-1 border-b w-[50px]">Count</th>
                     <th className="text-center py-0.5 px-1 border-b w-[50px]">Order</th>
                   </tr>
@@ -291,6 +319,7 @@ export default function CountPage() {
                     return (
                       <tr key={item.id} className={`border-b border-gray-100 ${belowPar && counts[item.id] !== undefined ? 'bg-orange-50' : ''}`}>
                         <td className="py-1 px-1 text-[10px]">{item.name}</td>
+                        <td className="text-center py-1 px-1 text-gray-500">{item.unit !== 'units' ? item.unit : ''}</td>
                         <td className="text-center py-1 px-1">{item.parLevel}</td>
                         <td className="text-center py-1 px-1 font-medium">
                           {counts[item.id] !== undefined ? counts[item.id] : '___'}
@@ -308,7 +337,7 @@ export default function CountPage() {
         })}
 
         <div className="mt-4 text-[9px] text-gray-500 text-center">
-          Par = Target inventory level | Count = Current inventory | Order = Suggested order amount
+          Par = Target inventory level | Count = Current inventory | Order = Suggested order amount | Unit = Order unit of measure
         </div>
       </div>
 
