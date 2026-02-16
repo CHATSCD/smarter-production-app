@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import QRCodeCanvas from '@/components/QRCodeCanvas';
-import html2pdf from 'html2pdf.js';
 import { CATEGORIES } from '@/data/inventory';
 import {
   getEnabledForSheets,
@@ -44,12 +43,15 @@ export default function PrintPage() {
   const element = document.querySelector('.print-only') as HTMLElement;
   if (!element) return;
 
+  const html2pdfModule = await import('html2pdf.js');
+  const html2pdf = html2pdfModule.default;
+
   const opt = {
     margin: 0.25,
     filename: `${formType}-${getTodayStr()}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
+    image: { type: 'jpeg' as const, quality: 0.98 },
     html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+    jsPDF: { unit: 'in' as const, format: 'letter' as const, orientation: 'portrait' as const },
   };
 
   await html2pdf().set(opt).from(element).save();
