@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "predev": "pg_ctlcluster 16 main start 2>/dev/null || true",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
