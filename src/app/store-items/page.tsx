@@ -321,7 +321,8 @@ export default function StoreItemsPage() {
                 {/* Column Headers */}
                 <div className="flex items-center justify-between py-1 border-b mb-2">
                   <span className="text-[10px] font-semibold text-gray-600 flex-1">Item Name</span>
-                  <div className="flex items-center gap-4 text-[10px] font-semibold text-gray-600">
+                  <div className="flex items-center gap-2 text-[10px] font-semibold text-gray-600">
+                    <span className="w-20 text-center">Supplier</span>
                     <span className="w-10 text-center">Sheets</span>
                     <span className="w-10 text-center">Inventory</span>
                   </div>
@@ -330,6 +331,13 @@ export default function StoreItemsPage() {
                 {catItems.map((item) => {
                   const forSheets = enabledForSheets.includes(item.id);
                   const forInventory = enabledForInventory.includes(item.id);
+
+                  const handleSupplierChange = (itemId: string, newSupplier: string) => {
+                    const inv = getInventory();
+                    const updated = inv.map((i) => i.id === itemId ? { ...i, supplier: newSupplier } : i);
+                    saveInventory(updated);
+                    reload();
+                  };
 
                   return (
                     <React.Fragment key={item.id}>
@@ -346,11 +354,22 @@ export default function StoreItemsPage() {
                         {item.custom && (
                           <button
                             onClick={() => handleDeleteCustom(item.id)}
-                            className="text-red-400 hover:text-red-600 mr-1"
+                            className="text-red-400 hover:text-red-600"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         )}
+                        {/* Supplier Dropdown */}
+                        <select
+                          value={item.supplier || 'Merchants'}
+                          onChange={(e) => handleSupplierChange(item.id, e.target.value)}
+                          className="w-20 text-[10px] border rounded px-1 py-0.5"
+                          title="Select supplier"
+                        >
+                          <option value="Merchants">Merchants</option>
+                          <option value="Schneider's">Schneider&apos;s</option>
+                          <option value="Other">Other</option>
+                        </select>
                         {/* Sheets Toggle */}
                         <button
                           onClick={() => handleToggleSheets(item.id)}

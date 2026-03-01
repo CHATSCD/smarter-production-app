@@ -12,6 +12,7 @@ export interface InventoryItem {
   category: string;
   parLevel: number;
   unit: string;
+  supplier?: string;          // Supplier/vendor (e.g., 'Merchants', 'Schneider's')
   custom?: boolean;
   // Executive features
   costPerUnit?: number;       // $ cost per unit (for waste $ calculations)

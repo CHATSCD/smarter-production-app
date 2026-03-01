@@ -25,6 +25,7 @@ export default function CountPage() {
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
+  const [supplierFilter, setSupplierFilter] = useState('All');
   const [locationName, setLocationName] = useState('');
   const [countDate, setCountDate] = useState('');
 
@@ -64,8 +65,12 @@ export default function CountPage() {
   const filteredItems = items.filter((item) => {
     const matchSearch = !search || item.name.toLowerCase().includes(search.toLowerCase());
     const matchCat = categoryFilter === 'All' || item.category === categoryFilter;
-    return matchSearch && matchCat;
+    const matchSupplier = supplierFilter === 'All' || (item.supplier || 'Merchants') === supplierFilter;
+    return matchSearch && matchCat && matchSupplier;
   });
+
+  // Get unique suppliers from items
+  const suppliers = Array.from(new Set(items.map((item) => item.supplier || 'Merchants'))).sort();
 
   const categories = CATEGORIES.filter((cat) =>
     items.some((item) => item.category === cat)
@@ -156,11 +161,21 @@ export default function CountPage() {
           <Select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="w-36"
+            className="w-32"
           >
-            <option value="All">All</option>
+            <option value="All">All Categories</option>
             {categories.map((c) => (
               <option key={c} value={c}>{c}</option>
+            ))}
+          </Select>
+          <Select
+            value={supplierFilter}
+            onChange={(e) => setSupplierFilter(e.target.value)}
+            className="w-32"
+          >
+            <option value="All">All Suppliers</option>
+            {suppliers.map((s) => (
+              <option key={s} value={s}>{s}</option>
             ))}
           </Select>
         </div>
@@ -282,63 +297,74 @@ export default function CountPage() {
 
       {/* ====== PRINTABLE ORDER SHEET ====== */}
       <div className="print-only">
-        <div className="text-center mb-3 border-b pb-2">
-          <h1 className="text-lg font-bold">Keith&apos;s Superstores</h1>
-          <p className="text-xs text-gray-500 italic">&ldquo;The Fastest And Friendliest&rdquo;</p>
-          {locationName && (
-            <p className="text-sm font-semibold text-purple-700">{locationName}</p>
-          )}
-          <h2 className="text-base font-semibold mt-1">INVENTORY COUNT & ORDER SHEET</h2>
-          <p className="text-sm">{todayFormatted}</p>
-        </div>
-
-        {/* Order Sheet Tables */}
-        {displayCategories.map((cat) => {
-          const catItems = filteredItems.filter((i) => i.category === cat);
-          if (catItems.length === 0) return null;
+        {suppliers.map((supplier, supplierIndex) => {
+          const supplierItems = items.filter((item) => (item.supplier || 'Merchants') === supplier);
+          const supplierCategories = CATEGORIES.filter((cat) =>
+            supplierItems.some((item) => item.category === cat)
+          );
 
           return (
-            <div key={cat} className="mb-3">
-              <h3 className="text-xs font-bold bg-gray-100 px-1 py-0.5 border-b">{cat}</h3>
-              <table className="w-full text-[10px] border-collapse">
-                <thead>
-                  <tr>
-                    <th className="text-left py-0.5 px-1 border-b">Item</th>
-                    <th className="text-center py-0.5 px-1 border-b w-[40px]">Unit</th>
-                    <th className="text-center py-0.5 px-1 border-b w-[40px]">Par</th>
-                    <th className="text-center py-0.5 px-1 border-b w-[50px]">Count</th>
-                    <th className="text-center py-0.5 px-1 border-b w-[50px]">Order</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {catItems.map((item) => {
-                    const currentCount = counts[item.id] || 0;
-                    const orderAmount = counts[item.id] !== undefined ? Math.max(0, item.parLevel - currentCount) : 0;
-                    const belowPar = currentCount < item.parLevel;
+            <div key={supplier} className={supplierIndex > 0 ? 'page-break-before' : ''}>
+              <div className="text-center mb-3 border-b pb-2">
+                <h1 className="text-lg font-bold">Keith&apos;s Superstores</h1>
+                <p className="text-xs text-gray-500 italic">&ldquo;The Fastest And Friendliest&rdquo;</p>
+                {locationName && (
+                  <p className="text-sm font-semibold text-purple-700">{locationName}</p>
+                )}
+                <h2 className="text-base font-semibold mt-1 text-keiths-red">{supplier.toUpperCase()} ORDER SHEET</h2>
+                <p className="text-sm">{todayFormatted}</p>
+              </div>
 
-                    return (
-                      <tr key={item.id} className={`border-b border-gray-100 ${belowPar && counts[item.id] !== undefined ? 'bg-orange-50' : ''}`}>
-                        <td className="py-1 px-1 text-[10px]">{item.name}</td>
-                        <td className="text-center py-1 px-1 text-gray-500">{item.unit !== 'units' ? item.unit : ''}</td>
-                        <td className="text-center py-1 px-1">{item.parLevel}</td>
-                        <td className="text-center py-1 px-1 font-medium">
-                          {counts[item.id] !== undefined ? counts[item.id] : '___'}
-                        </td>
-                        <td className="text-center py-1 px-1 font-bold">
-                          {counts[item.id] !== undefined && orderAmount > 0 ? orderAmount : ''}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              {/* Order Sheet Tables by Category */}
+              {supplierCategories.map((cat) => {
+                const catItems = supplierItems.filter((i) => i.category === cat);
+                if (catItems.length === 0) return null;
+
+                return (
+                  <div key={cat} className="mb-3">
+                    <h3 className="text-xs font-bold bg-gray-100 px-1 py-0.5 border-b">{cat}</h3>
+                    <table className="w-full text-[10px] border-collapse">
+                      <thead>
+                        <tr>
+                          <th className="text-left py-0.5 px-1 border-b">Item</th>
+                          <th className="text-center py-0.5 px-1 border-b w-[40px]">Unit</th>
+                          <th className="text-center py-0.5 px-1 border-b w-[40px]">Par</th>
+                          <th className="text-center py-0.5 px-1 border-b w-[50px]">Count</th>
+                          <th className="text-center py-0.5 px-1 border-b w-[50px]">Order</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {catItems.map((item) => {
+                          const currentCount = counts[item.id] || 0;
+                          const orderAmount = counts[item.id] !== undefined ? Math.max(0, item.parLevel - currentCount) : 0;
+                          const belowPar = currentCount < item.parLevel;
+
+                          return (
+                            <tr key={item.id} className={`border-b border-gray-100 ${belowPar && counts[item.id] !== undefined ? 'bg-orange-50' : ''}`}>
+                              <td className="py-1 px-1 text-[10px]">{item.name}</td>
+                              <td className="text-center py-1 px-1 text-gray-500">{item.unit !== 'units' ? item.unit : ''}</td>
+                              <td className="text-center py-1 px-1">{item.parLevel}</td>
+                              <td className="text-center py-1 px-1 font-medium">
+                                {counts[item.id] !== undefined ? counts[item.id] : '___'}
+                              </td>
+                              <td className="text-center py-1 px-1 font-bold">
+                                {counts[item.id] !== undefined && orderAmount > 0 ? orderAmount : ''}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })}
+
+              <div className="mt-4 text-[9px] text-gray-500 text-center">
+                Par = Target inventory level | Count = Current inventory | Order = Suggested order amount | Unit = Order unit of measure
+              </div>
             </div>
           );
         })}
-
-        <div className="mt-4 text-[9px] text-gray-500 text-center">
-          Par = Target inventory level | Count = Current inventory | Order = Suggested order amount | Unit = Order unit of measure
-        </div>
       </div>
 
       <BottomNav />
