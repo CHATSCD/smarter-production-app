@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { query, queryOne } from '@/lib/db';
 import { withAuth, apiOk, apiError, parseBody } from '@/lib/apiMiddleware';
+import { getCompanyFromAuth } from '@/lib/auth';
 
 // GET /api/shifts?date=YYYY-MM-DD&storeId=...
 export const GET = withAuth(async (req, auth) => {
@@ -9,6 +10,9 @@ export const GET = withAuth(async (req, auth) => {
   const storeId = auth.role === 'admin' ? (searchParams.get('storeId') || auth.storeId) : auth.storeId;
   const weekStart = searchParams.get('weekStart');
   const weekEnd = searchParams.get('weekEnd');
+
+  // Get company_id for filtering (null for super_admin)
+  const companyId = getCompanyFromAuth(auth);
 
   let q = `
     SELECT s.*,
@@ -21,6 +25,12 @@ export const GET = withAuth(async (req, auth) => {
     WHERE s.store_id = $1
   `;
   const params: unknown[] = [storeId];
+
+  // Add company filter (unless super_admin)
+  if (companyId) {
+    params.push(companyId);
+    q += ` AND s.company_id = $${params.length}`;
+  }
 
   if (date) {
     params.push(date);
@@ -65,14 +75,20 @@ export const POST = withAuth(async (req, auth) => {
     [auth.storeId]
   );
 
+  // Get company_id from auth (required for INSERT)
+  const companyId = auth.companyId;
+  if (!companyId) {
+    return apiError('User must be associated with a company', 400);
+  }
+
   const shift = await queryOne(
     `INSERT INTO shifts
-      (store_id, date, start_time, end_time, role_required, station, notes,
+      (company_id, store_id, date, start_time, end_time, role_required, station, notes,
        approval_required, event_flag, event_note, created_by)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
      RETURNING *`,
     [
-      auth.storeId, body.date, body.startTime, body.endTime,
+      companyId, auth.storeId, body.date, body.startTime, body.endTime,
       body.roleRequired || null, body.station || null, body.notes || null,
       body.approvalRequired ?? settings?.require_approval ?? true,
       body.eventFlag ?? false, body.eventNote || null,

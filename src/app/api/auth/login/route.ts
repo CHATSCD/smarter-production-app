@@ -10,12 +10,18 @@ export async function POST(req: NextRequest) {
 
   let user: {
     id: string; name: string; email: string; password_hash: string;
-    role: 'admin' | 'manager' | 'employee'; store_id: string; active: boolean;
+    role: 'super_admin' | 'admin' | 'manager' | 'employee';
+    company_id?: string;
+    store_id?: string;
+    active: boolean;
   } | null;
   try {
     user = await queryOne<{
       id: string; name: string; email: string; password_hash: string;
-      role: 'admin' | 'manager' | 'employee'; store_id: string; active: boolean;
+      role: 'super_admin' | 'admin' | 'manager' | 'employee';
+      company_id?: string;
+      store_id?: string;
+      active: boolean;
     }>('SELECT * FROM users WHERE email = $1', [body.email.toLowerCase().trim()]);
   } catch {
     return NextResponse.json({ error: 'Database connection failed. Please try again.' }, { status: 503 });
@@ -32,6 +38,7 @@ export async function POST(req: NextRequest) {
 
   const token = signToken({
     userId: user.id,
+    companyId: user.company_id,
     email: user.email,
     role: user.role,
     storeId: user.store_id,
@@ -41,7 +48,14 @@ export async function POST(req: NextRequest) {
   setAuthCookie(token);
 
   return NextResponse.json({
-    user: { id: user.id, name: user.name, email: user.email, role: user.role, storeId: user.store_id },
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      companyId: user.company_id,
+      storeId: user.store_id,
+    },
     token,
   });
 }

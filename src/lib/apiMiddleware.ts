@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthFromRequest, JWTPayload } from './auth';
 
-export type Role = 'admin' | 'manager' | 'employee';
+export type Role = 'super_admin' | 'admin' | 'manager' | 'employee';
 
 export type AuthedHandler = (
   req: NextRequest,
