@@ -13,19 +13,20 @@ async function runMigrations() {
   try {
     console.log('🔄 Connecting to database...');
 
-    // Run all migrations in order
-    const migrations = ['001_initial.sql', '002_add_company_support.sql'];
+    // Run the complete schema migration
+    const migrationPath = join(process.cwd(), 'migrations', '001_complete_schema.sql');
+    const sql = readFileSync(migrationPath, 'utf8');
 
-    for (const migrationFile of migrations) {
-      const migrationPath = join(process.cwd(), 'migrations', migrationFile);
-      const sql = readFileSync(migrationPath, 'utf8');
+    console.log('🔄 Running complete schema migration...');
+    await pool.query(sql);
 
-      console.log(`🔄 Running migration: ${migrationFile}`);
-      await pool.query(sql);
-      console.log(`✅ ${migrationFile} completed`);
-    }
-
-    console.log('✅ All migrations completed successfully!');
+    console.log('✅ Database schema created successfully!');
+    console.log('📊 All tables created');
+    console.log('👤 Seed users added (password: password123)');
+    console.log('   - admin@keiths.com');
+    console.log('   - manager@keiths.com');
+    console.log('   - john@keiths.com');
+    console.log('   - jane@keiths.com');
   } catch (error) {
     console.error('❌ Migration failed:', error);
     process.exit(1);
