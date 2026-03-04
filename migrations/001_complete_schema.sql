@@ -202,7 +202,7 @@ GROUP BY u.id, u.name, u.company_id, u.store_id;
 
 -- Insert default company
 INSERT INTO companies (id, name)
-VALUES ('company-01', 'Keith''s Superstores')
+VALUES ('company-01', 'Run DAT Kitchen')
 ON CONFLICT (id) DO NOTHING;
 
 -- Insert default store
@@ -214,10 +214,10 @@ ON CONFLICT (id) DO NOTHING;
 -- Password for all: "password123"
 -- Hash: $2b$10$vlyNbuenBogsO2r6gt0WHeW6pwzodRPLVN2kODMebJMZiGYG6IjHW
 INSERT INTO users (name, email, password_hash, role, company_id, store_id) VALUES
-  ('Admin User',   'admin@keiths.com',   '$2b$10$vlyNbuenBogsO2r6gt0WHeW6pwzodRPLVN2kODMebJMZiGYG6IjHW', 'admin',    'company-01', 'store-01'),
-  ('Manager Sue',  'manager@keiths.com', '$2b$10$vlyNbuenBogsO2r6gt0WHeW6pwzodRPLVN2kODMebJMZiGYG6IjHW', 'manager',  'company-01', 'store-01'),
-  ('John Smith',   'john@keiths.com',    '$2b$10$vlyNbuenBogsO2r6gt0WHeW6pwzodRPLVN2kODMebJMZiGYG6IjHW', 'employee', 'company-01', 'store-01'),
-  ('Jane Doe',     'jane@keiths.com',    '$2b$10$vlyNbuenBogsO2r6gt0WHeW6pwzodRPLVN2kODMebJMZiGYG6IjHW', 'employee', 'company-01', 'store-01')
+  ('Admin User',   'admin@rundat.com',   '$2b$10$vlyNbuenBogsO2r6gt0WHeW6pwzodRPLVN2kODMebJMZiGYG6IjHW', 'admin',    'company-01', 'store-01'),
+  ('Manager Sue',  'manager@rundat.com', '$2b$10$vlyNbuenBogsO2r6gt0WHeW6pwzodRPLVN2kODMebJMZiGYG6IjHW', 'manager',  'company-01', 'store-01'),
+  ('John Smith',   'john@rundat.com',    '$2b$10$vlyNbuenBogsO2r6gt0WHeW6pwzodRPLVN2kODMebJMZiGYG6IjHW', 'employee', 'company-01', 'store-01'),
+  ('Jane Doe',     'jane@rundat.com',    '$2b$10$vlyNbuenBogsO2r6gt0WHeW6pwzodRPLVN2kODMebJMZiGYG6IjHW', 'employee', 'company-01', 'store-01')
 ON CONFLICT (email) DO NOTHING;
 
 -- Insert default scheduling settings
@@ -231,10 +231,11 @@ ON CONFLICT (store_id) DO NOTHING;
 DO $$
 BEGIN
   RAISE NOTICE '✅ Database schema created successfully!';
+  RAISE NOTICE '🍳 Company: Run DAT Kitchen';
   RAISE NOTICE '📊 Tables: companies, stores, users, shifts, waste_logs, production_logs, swap_requests, notifications';
   RAISE NOTICE '👤 Default users created (password: password123):';
-  RAISE NOTICE '   - admin@keiths.com (Admin)';
-  RAISE NOTICE '   - manager@keiths.com (Manager)';
-  RAISE NOTICE '   - john@keiths.com (Employee)';
-  RAISE NOTICE '   - jane@keiths.com (Employee)';
+  RAISE NOTICE '   - admin@rundat.com (Admin)';
+  RAISE NOTICE '   - manager@rundat.com (Manager)';
+  RAISE NOTICE '   - john@rundat.com (Employee)';
+  RAISE NOTICE '   - jane@rundat.com (Employee)';
 END $$;
