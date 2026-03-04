@@ -13,13 +13,19 @@ async function runMigrations() {
   try {
     console.log('🔄 Connecting to database...');
 
-    const migrationPath = join(process.cwd(), 'migrations', '001_initial.sql');
-    const sql = readFileSync(migrationPath, 'utf8');
+    // Run all migrations in order
+    const migrations = ['001_initial.sql', '002_add_company_support.sql'];
 
-    console.log('🔄 Running migration: 001_initial.sql');
-    await pool.query(sql);
+    for (const migrationFile of migrations) {
+      const migrationPath = join(process.cwd(), 'migrations', migrationFile);
+      const sql = readFileSync(migrationPath, 'utf8');
 
-    console.log('✅ Migration completed successfully!');
+      console.log(`🔄 Running migration: ${migrationFile}`);
+      await pool.query(sql);
+      console.log(`✅ ${migrationFile} completed`);
+    }
+
+    console.log('✅ All migrations completed successfully!');
   } catch (error) {
     console.error('❌ Migration failed:', error);
     process.exit(1);
